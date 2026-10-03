@@ -1,0 +1,128 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Participant operative profile document",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "format": "email", "maxLength": 200 },
+        "teamId": { "type": "string", "maxLength": 64 },
+        "role": { "type": "string", "enum": ["memberA", "memberB", "admin"] },
+        "callsign": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "email", "role", "callsign"]
+    },
+    "Team": {
+      "title": "Team",
+      "description": "Two-member team state document",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 32 },
+        "teamName": { "type": "string", "maxLength": 64 },
+        "joinCode": { "type": "string", "maxLength": 16 },
+        "status": { "type": "string", "enum": ["waiting", "active", "finished", "locked"] },
+        "totalScore": { "type": "number" },
+        "currentLevel": { "type": "number" },
+        "memberCount": { "type": "number" },
+        "startTime": { "type": "string", "format": "date-time" },
+        "finishedAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "teamName", "joinCode", "status", "totalScore", "currentLevel", "memberCount"]
+    },
+    "TeamMember": {
+      "title": "TeamMember",
+      "description": "Individual member record under team",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "format": "email", "maxLength": 200 },
+        "callsign": { "type": "string", "maxLength": 64 },
+        "role": { "type": "string", "enum": ["memberA", "memberB", "admin"] },
+        "isOnline": { "type": "boolean" },
+        "currentLevelNumber": { "type": "number" },
+        "lastHeartbeat": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "email", "callsign", "role", "isOnline"]
+    },
+    "LevelProgress": {
+      "title": "LevelProgress",
+      "description": "Progress for a specific mission level under team",
+      "type": "object",
+      "properties": {
+        "levelId": { "type": "string", "maxLength": 32 },
+        "levelNumber": { "type": "number" },
+        "status": { "type": "string", "enum": ["LOCKED", "AVAILABLE", "ACTIVE", "COMPLETED"] },
+        "timeSpentSeconds": { "type": "number" },
+        "earnedXP": { "type": "number" },
+        "wrongAttemptsCount": { "type": "number" },
+        "aiDeclaredCount": { "type": "number" },
+        "completedByName": { "type": "string", "maxLength": 100 },
+        "completedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["levelId", "levelNumber", "status"]
+    },
+    "ActivityEvent": {
+      "title": "ActivityEvent",
+      "description": "Real-time activity audit log item under team",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "operativeCallsign": { "type": "string", "maxLength": 64 },
+        "operativeRole": { "type": "string", "enum": ["memberA", "memberB", "admin"] },
+        "type": { "type": "string", "maxLength": 64 },
+        "message": { "type": "string", "maxLength": 300 },
+        "deltaXp": { "type": "number" },
+        "levelNumber": { "type": "number" }
+      },
+      "required": ["id", "operativeCallsign", "operativeRole", "type", "message"]
+    },
+    "Event": {
+      "title": "Event",
+      "description": "Global event state and timing configuration",
+      "type": "object",
+      "properties": {
+        "eventId": { "type": "string", "maxLength": 64 },
+        "eventName": { "type": "string", "maxLength": 128 },
+        "status": { "type": "string", "enum": ["NOT_STARTED", "WAITING", "ACTIVE", "PAUSED", "FINISHED"] },
+        "durationMinutes": { "type": "number" },
+        "startTime": { "type": "string", "format": "date-time" },
+        "endTime": { "type": "string", "format": "date-time" }
+      },
+      "required": ["eventId", "eventName", "status", "durationMinutes"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Operative user profile document mapped by Auth UID"
+    },
+    "/teams/{teamId}": {
+      "schema": "Team",
+      "description": "Two-member shared team document"
+    },
+    "/teams/{teamId}/members/{memberId}": {
+      "schema": "TeamMember",
+      "description": "Team member presence and assignment"
+    },
+    "/teams/{teamId}/levelProgress/{levelId}": {
+      "schema": "LevelProgress",
+      "description": "Progress state per sector"
+    },
+    "/teams/{teamId}/activity/{activityId}": {
+      "schema": "ActivityEvent",
+      "description": "Shared activity feed stream"
+    },
+    "/events/{eventId}": {
+      "schema": "Event",
+      "description": "Global tournament event coordination"
+    }
+  }
+}

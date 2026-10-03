@@ -1,0 +1,95 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == '23kb1a3334@nbkrist.org' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isSignedIn() 
+        && isOwner(userId)
+        && incoming().uid == request.auth.uid
+        && incoming().name is string && incoming().name.size() <= 100
+        && incoming().email is string && incoming().email.size() <= 200
+        && incoming().role in ['memberA', 'memberB', 'admin'];
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (isOwner(userId) && incoming().uid == existing().uid && incoming().email == existing().email)
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Admins Collection
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Teams Collection
+    match /teams/{teamId} {
+      allow read: if true;
+      allow create: if isSignedIn() 
+        && incoming().id is string && incoming().id.size() <= 32
+        && incoming().teamName is string && incoming().teamName.size() <= 64;
+      allow update: if isSignedIn();
+      allow delete: if isAdmin();
+
+      // Subcollection: Members
+      match /members/{memberId} {
+        allow read: if true;
+        allow write: if isSignedIn();
+      }
+
+      // Subcollection: LevelProgress
+      match /levelProgress/{levelId} {
+        allow read: if true;
+        allow write: if isSignedIn();
+      }
+
+      // Subcollection: Activity
+      match /activity/{activityId} {
+        allow read: if true;
+        allow create: if isSignedIn();
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    // Global Events
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

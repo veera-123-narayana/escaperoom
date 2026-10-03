@@ -1,0 +1,6 @@
+{
+  "name": "SYSTEM OMEGA - Tech Escape Room",
+  "description": "TECH ESCAPE ROOM: THE OMEGA PROTOCOL. 15 Levels. 105 Minutes. 1 Mission. An immersive cyber-operations competition platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
